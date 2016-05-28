@@ -10,8 +10,7 @@ defmodule Meter.Mixfile do
      deps: deps,
      description: "Track your elixir application on google analytycs",
      name: "Meter",
-     source_url: "https://github.com/carlo-colombo/Meter",
-     # test_coverage: [tool: Coverex.Task, coveralls: true],
+     source_url: "https://github.com/carlo-colombo/meter",
      docs: [
        main: Meter
      ],
