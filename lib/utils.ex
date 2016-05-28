@@ -1,7 +1,9 @@
 defmodule Meter.Utils do
 
   @doc """
-    Generate a list of 2-element tuple, the first element is the name of the parameter (cd1, cd2, cd ...) and the second is the value. This function is used in to the default param_generator function providing the values from the application configuration. It could be used in a custom param_generator.
+  Generate a list of 2-element tuple, the first element is the name of the parameter (cd1, cd2, cd ...) and the second is the value.
+
+  This function is used in to the default param_generator function providing the values from the application configuration. It could be used in a custom param_generator. It maintain the order as defined in the configuration.
 
 ```
   iex> Meter.Utils.custom_dimensions([], [key: "value"])
@@ -32,6 +34,8 @@ defmodule Meter.Utils do
   end
 
   @doc """
+  Default param_generator function. Generate all parameters necessary to send a tracking request to google analytics
+
   ```
     iex>Meter.Utils.param_generator(:fn, [arg1: 3, arg2: 5], "UA-123", [cid: :arg2], [:arg2, :arg1])
     [v: 1,
@@ -48,9 +52,9 @@ defmodule Meter.Utils do
   def param_generator(function_name, kwargs, tid, mapping, custom_dimensions) do
       [v: 1,
        tid: tid,
-       cid: kwargs[mapping[:cid]],
-       ds: "server",
-       t: "pageview",
+       cid: kwargs[mapping[:cid]] ,
+       ds:  mapping[:ds] || "server",
+       t:   mapping[:t]  || "pageview",
        dt: "#{function_name}",
        dp: "/#{function_name}"
       ] ++
