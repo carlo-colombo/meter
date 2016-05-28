@@ -33,7 +33,7 @@ defmodule Meter.Utils do
 
   @doc """
   ```
-    iex>Meter.Utils.param_generator(:fn, [arg1: 3, arg2: 5], "UA-123", [cid: :arg2])
+    iex>Meter.Utils.param_generator(:fn, [arg1: 3, arg2: 5], "UA-123", [cid: :arg2], [:arg2, :arg1])
     [v: 1,
      tid: "UA-123",
      cid: 5,
@@ -43,27 +43,9 @@ defmodule Meter.Utils do
      dp: "/fn"] ++
     [{"cd1", 5},{"cd2", 3}]
 
-    iex>Meter.Utils.param_generator(:fn, [])
-    [v: 1,
-     tid: nil,
-     cid: nil,
-     ds: "server",
-     t: "pageview",
-     dt: "fn",
-     dp: "/fn"]
-
-    iex>Meter.Utils.param_generator(:fn, [], "UA-123")
-    [v: 1,
-     tid: "UA-123",
-     cid: nil,
-     ds: "server",
-     t: "pageview",
-     dt: "fn",
-     dp: "/fn"]
-
   ```
   """
-  def param_generator(function_name, kwargs, tid, mapping) do
+  def param_generator(function_name, kwargs, tid, mapping, custom_dimensions) do
       [v: 1,
        tid: tid,
        cid: kwargs[mapping[:cid]],
@@ -72,12 +54,6 @@ defmodule Meter.Utils do
        dt: "#{function_name}",
        dp: "/#{function_name}"
       ] ++
-      custom_dimensions([:arg2, :arg1], kwargs)
-  end
-  def param_generator(function_name, kwargs) do
-    param_generator(function_name, kwargs, nil, nil)
-  end
-  def param_generator(function_name, kwargs, tid) do
-    param_generator(function_name, kwargs, tid, nil)
+      custom_dimensions(custom_dimensions, kwargs)
   end
 end
