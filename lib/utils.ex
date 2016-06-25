@@ -49,7 +49,7 @@ defmodule Meter.Utils do
 
   ```
   """
-  def param_generator(function_name, kwargs, tid, mapping, custom_dimensions) do
+  defp __param_generator(function_name, kwargs, tid, mapping, custom_dimensions) do
       [v: 1,
        tid: tid,
        cid: kwargs[mapping[:cid]] ,
@@ -60,11 +60,11 @@ defmodule Meter.Utils do
       ] ++
       custom_dimensions(custom_dimensions, kwargs)
   end
-  def param_generator(function_name, kwargs, tid, mapping, custom_dimensions, error) do
-    param_generator(function_name, kwargs, tid, mapping, custom_dimensions) ++ [
+  def param_generator(function_name, kwargs, tid, mapping, custom_dimensions, error \\ nil) do
+    __param_generator(function_name, kwargs, tid, mapping, custom_dimensions) ++ if error != nil [
       exf: 1,
       exd: inspect(error)
-    ]
+    ] else []
   end
 
 end
