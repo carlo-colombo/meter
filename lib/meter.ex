@@ -43,6 +43,20 @@ defmodule Meter do
     end
   end
 
+  # @spec track(atom, Keyword.t, (atom, Keyword.t, String.t, Keyword.t, [atom, ...] -> Keyword.t)) :: any
+  def track_error(function_name, kwargs, error,
+            param_generator \\ Application.get_env(:meter, :param_generator, &Meter.Utils.param_generator/6)) do
+    tid = Application.get_env(:meter, :tid)
+
+    if tid != nil do
+      mapping = Application.get_env(:meter, :mapping, [])
+      custom_dimensions = Application.get_env(:meter, :custom_dimensions, [])
+
+      body = {:form, param_generator.(function_name, kwargs, tid, mapping, custom_dimensions, error)}
+      send_request(self, body)
+    end
+  end
+
   @doc """
   Replace a function definition, automatically tracking every call to the function on google analytics.
 
@@ -58,24 +72,40 @@ defmodule Meter do
 
       track(:function, [arg1: 1, arg2: 2])
 
-  Additional parameters will be loaded from the configuration
+  Additional parameters will be loaded from the configurationd
   """
   defmacro defmeter({function,_,args}=fundef, [do: body]) do
     names = args
     |> Enum.map(fn {arg_name, _,_} -> arg_name end)
 
-    metered = {:__block__, [],
-               [quote do
-                 values= unquote(
-                   args
-                   |> Enum.map(fn arg ->  quote do
-                       var!(unquote(arg))
-                     end
-                   end)
-                 )
-                 map = Enum.zip(unquote(names), values)
-                 track(unquote(function), map)
-               end, body]}
+    """
+    try do
+      body()
+      track()
+    rescue
+      track_error()
+    end
+    """
+
+
+    metered = quote do
+      values= unquote(
+        args
+        |> Enum.map(fn arg ->  quote do
+            var!(unquote(arg))
+          end
+        end)
+      )
+      map = Enum.zip(unquote(names), values)
+
+      try do
+        to_return = unquote(body)
+        track(unquote(function), map)
+        to_return
+      rescue
+        e -> track_error(unquote(function), map, e)
+      end
+    end
 
     quote do
       def(unquote(fundef),unquote([do: metered]))
@@ -85,7 +115,7 @@ defmodule Meter do
   defp send_request(pid, body) do
     spawn fn ->
       case HTTPoison.post("https://www.google-analytics.com/collect", body) do
-        {:ok, resp} -> Logger.info("sent #{inspect(resp)}")
+        {:ok, resp} -> :ok
         {:error, error} -> Logger.warn("Error #{inspect(error)}")
       end
       send(pid, {:track_sent, body})

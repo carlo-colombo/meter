@@ -54,7 +54,7 @@ defmodule MeterTest do
     end
   end
 
-  test "defmeter macro" do
+  test "defmeter macro calls Meter.track" do
     defmodule TestMacro do
       import Meter
       defmeter function(arg1,arg2) do
@@ -63,12 +63,26 @@ defmodule MeterTest do
     end
 
     with_env([meter: [tid: "UA-123-1"]]) do
-      with_mock HTTPoison, mocks do
+      with_mock Meter, [track: fn (_,_) -> {:ok} end] do
         assert {1, 2} == TestMacro.function(1, 2)
+        assert called Meter.track(:function, [arg1: 1, arg2: 2])
+      end
+    end
+  end
 
-        assert_receive({:track_sent, request})
-        assert {:form, body} = request
-        assert body == Utils.param_generator(:function, [arg1: 1, arg2: 2], "UA-123-1", [], [])
+  test "defmeter macro tracks errors" do
+    defmodule TestMacro1 do
+      import Meter
+      defmeter function(arg1,arg2) do
+        raise "an error"
+      end
+    end
+
+    with_env([meter: [tid: "UA-123-1"]]) do
+      with_mock Meter, [track_error: fn (_,_,e) -> {:ok, e} end] do
+        TestMacro1.function(1, 2)
+
+        assert called Meter.track_error(:function, [arg1: 1, arg2: 2], %RuntimeError{message: "an error"})
       end
     end
   end
@@ -93,6 +107,19 @@ defmodule MeterTest do
         assert_receive({:track_sent, request})
         assert {:form, body} = request
         assert body == Utils.param_generator(:fn, [arg1: 1], "UA-123-1", [], [:arg1])
+      end
+    end
+  end
+
+  test "track_error calls track with additional exception info" do
+    error = %RuntimeError{message: "asdas"}
+    with_env([meter: [tid: "UA-123-1", custom_dimensions: [:arg1]]]) do
+      with_mock HTTPoison, mocks do
+        Meter.track_error(:fn, [arg1: 1], error)
+
+        assert_receive({:track_sent, request})
+        assert {:form, body} = request
+        assert body == Utils.param_generator(:fn, [arg1: 1], "UA-123-1", [], [:arg1], error)
       end
     end
   end

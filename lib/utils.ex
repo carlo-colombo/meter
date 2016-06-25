@@ -60,4 +60,11 @@ defmodule Meter.Utils do
       ] ++
       custom_dimensions(custom_dimensions, kwargs)
   end
+  def param_generator(function_name, kwargs, tid, mapping, custom_dimensions, error) do
+    param_generator(function_name, kwargs, tid, mapping, custom_dimensions) ++ [
+      exf: 1,
+      exd: inspect(error)
+    ]
+  end
+
 end
