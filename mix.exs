@@ -11,6 +11,7 @@ defmodule Meter.Mixfile do
      description: "Track your elixir application on google analytycs",
      name: "Meter",
      source_url: "https://github.com/carlo-colombo/meter",
+     test_coverage: [tool: Coverex.Task, coveralls: true],
      docs: [
        main: Meter
      ],
@@ -46,6 +47,7 @@ defmodule Meter.Mixfile do
      {:earmark, "~> 0.2", only: :dev},
      {:ex_doc, "~> 0.11", only: :dev},
      {:mock, "~> 0.1.1", only: :test},
+     {:coverex, "~> 1.4.7", only: :test},
      {:credo, "~> 0.3", only: [:test, :dev]}
     ]
   end
