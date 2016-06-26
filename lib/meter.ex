@@ -22,7 +22,7 @@ defmodule Meter do
 
   """
 
-  @doc "Track a function and its own arguments
+  @doc "Track a function and its own arguments.
 
   Get ```:tid```, ```:mapping``` and ```:custom_dimension``` from configuration. If ```:tid``` is not defined does nothing.
   The request to google analytycs is send asynchronously.
@@ -58,7 +58,7 @@ defmodule Meter do
   end
 
   @doc """
-  Replace a function definition, automatically tracking every call to the function on google analytics.
+  Replace a function definition, automatically tracking every call to the function on google analytics. It also track exception with the function track_error.
 
   This macro intended use is with a set of uniform functions that can be concettualy mapped to pageviews (eg: messaging bot commands).
 
@@ -78,16 +78,6 @@ defmodule Meter do
     names = args
     |> Enum.map(fn {arg_name, _,_} -> arg_name end)
 
-    """
-    try do
-      body()
-      track()
-    rescue
-      track_error()
-    end
-    """
-
-
     metered = quote do
       values= unquote(
         args
@@ -103,7 +93,9 @@ defmodule Meter do
         track(unquote(function), map)
         to_return
       rescue
-        e -> track_error(unquote(function), map, e)
+        e ->
+          track_error(unquote(function), map, e)
+          raise e
       end
     end
 

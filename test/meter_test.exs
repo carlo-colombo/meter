@@ -70,7 +70,7 @@ defmodule MeterTest do
     end
   end
 
-  test "defmeter macro tracks errors" do
+  test "defmeter macro tracks errors and reraise the exception" do
     defmodule TestMacro1 do
       import Meter
       defmeter function(arg1,arg2) do
@@ -80,7 +80,9 @@ defmodule MeterTest do
 
     with_env([meter: [tid: "UA-123-1"]]) do
       with_mock Meter, [track_error: fn (_,_,e) -> {:ok, e} end] do
-        TestMacro1.function(1, 2)
+        assert_raise RuntimeError, fn ->
+          TestMacro1.function(1, 2)
+        end
 
         assert called Meter.track_error(:function, [arg1: 1, arg2: 2], %RuntimeError{message: "an error"})
       end
