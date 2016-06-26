@@ -37,34 +37,44 @@ defmodule Meter.Utils do
   Default param_generator function. Generate all parameters necessary to send a tracking request to google analytics
 
   ```
-    iex>Meter.Utils.param_generator(:fn, [arg1: 3, arg2: 5], "UA-123", [cid: :arg2], [:arg2, :arg1])
-    [v: 1,
-     tid: "UA-123",
-     cid: 5,
-     ds: "server",
-     t: "pageview",
-     dt: "fn",
-     dp: "/fn"] ++
-    [{"cd1", 5},{"cd2", 3}]
+  iex>Meter.Utils.param_generator(:fn, [arg1: 3, arg2: 5], "UA-123", [cid: :arg2], [:arg2, :arg1])
+  [v: 1,
+  tid: "UA-123",
+  cid: 5,
+  ds: "server",
+  t: "pageview",
+  dt: "fn",
+  dp: "/fn"] ++
+  [{"cd1", 5},{"cd2", 3}]
+
+  iex>Meter.Utils.param_generator(:fn, [arg1: 3, arg2: 5], "UA-123", [cid: :arg2], [:arg2, :arg1], %RuntimeError{message: "an error"})
+  [v: 1,
+  tid: "UA-123",
+  cid: 5,
+  ds: "server",
+  t: "pageview",
+  dt: "fn",
+  dp: "/fn"] ++
+  [{"cd1", 5},{"cd2", 3}] ++ [exf: 1, exd: "%RuntimeError{message: \\"an error\\"}"]
 
   ```
   """
-  defp __param_generator(function_name, kwargs, tid, mapping, custom_dimensions) do
-      [v: 1,
-       tid: tid,
-       cid: kwargs[mapping[:cid]] ,
-       ds:  mapping[:ds] || "server",
-       t:   mapping[:t]  || "pageview",
-       dt: "#{function_name}",
-       dp: "/#{function_name}"
-      ] ++
-      custom_dimensions(custom_dimensions, kwargs)
-  end
   def param_generator(function_name, kwargs, tid, mapping, custom_dimensions, error \\ nil) do
-    __param_generator(function_name, kwargs, tid, mapping, custom_dimensions) ++ if error != nil [
+    __param_generator(function_name, kwargs, tid, mapping, custom_dimensions) ++ if error != nil,  do: [
       exf: 1,
       exd: inspect(error)
-    ] else []
+    ], else: []
   end
 
+  defp __param_generator(function_name, kwargs, tid, mapping, custom_dimensions) do
+    [v: 1,
+     tid: tid,
+     cid: kwargs[mapping[:cid]] ,
+     ds:  mapping[:ds] || "server",
+     t:   mapping[:t]  || "pageview",
+     dt: "#{function_name}",
+     dp: "/#{function_name}"
+    ] ++
+      custom_dimensions(custom_dimensions, kwargs)
+  end
 end
