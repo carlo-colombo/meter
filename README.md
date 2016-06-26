@@ -5,7 +5,20 @@
 
 # Meter
 
-**TODO: Add description**
+  Track your elixir functions on Google Analytics
+
+  This module define one function to track function calls on google analtycs. The functions load parameters from the configuration. Minimum parameter to enable the tracking is :tid (that is the monitoring id from google analytics eg ```UA-12456132-1```). A default ```param_generator``` function is provided to generate the request to google analtycs.
+
+### Configure the module
+
+      config :meter,
+        tid: "UA-123123123-1",  #to track functions this is requested
+        param_generator: &Meter.Utils.param_generator/5 # the default function, could be replaced,
+        mapping: [
+          cid: :arg1, # a value to identify the user, is extracted from the function arguments, if not provided GA generate one for each request
+          ds: "server", # data source, "server" is the default
+          t: "pageview" # hit type, default is "pageview" ],
+        custom_dimensions: [:arg1, :arg2] # custom dimensions to send to ga, it mantain the order, to be used need additional configuration on ga
 
 ## Installation
 
