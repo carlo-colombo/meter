@@ -1,4 +1,9 @@
 defmodule Meter.Utils do
+  @moduledoc """
+  A module with utility functions to generate parameters to send to Google Analytycs.
+
+  The function param_generator/6  is the default function in Meter.track/2 and Meter.track_error/3
+  """
 
   @doc """
   Generate a list of 2-element tuple, the first element is the name of the parameter (cd1, cd2, cd ...) and the second is the value.
@@ -30,7 +35,7 @@ defmodule Meter.Utils do
     1..length(dimensions)
     |> Enum.map(fn i -> "cd#{i}" end)
     |> Enum.zip(dimensions)
-    |> Enum.map(fn {cdi,argname} -> {cdi, kwargs[argname]} end )
+    |> Enum.map(fn {cdi,argname} -> {cdi, kwargs[argname]} end)
   end
 
   @doc """
@@ -60,11 +65,32 @@ defmodule Meter.Utils do
   ```
   """
   def param_generator(function_name, kwargs, tid, mapping, custom_dimensions, error \\ nil) do
-    __param_generator(function_name, kwargs, tid, mapping, custom_dimensions) ++ if error != nil,  do: [
-      exf: 1,
-      exd: inspect(error)
-    ], else: []
+    [v: 1,
+     tid: tid,
+     cid: kwargs[mapping[:cid]] ,
+     ds:  mapping[:ds] || "server",
+     t:   mapping[:t]  || "pageview",
+     dt: "#{function_name}",
+     dp: "/#{function_name}"
+    ]
+    ++ custom_dimensions(custom_dimensions, kwargs)
+    ++ error_params(error)
   end
+
+  @doc """
+  Default param_generator function. Generate all parameters necessary to send a tracking request to google analytics
+
+  ```
+  iex>Meter.Utils.error_params(%RuntimeError{message: "an error"})
+  [exf: 1, exd: "%RuntimeError{message: \\"an error\\"}"]
+
+  iex>Meter.Utils.error_params(nil)
+  []
+
+  """
+  @spec error_params(map) :: Keyword.t
+  def error_params(nil), do: []
+  def error_params(error), do: [exf: 1, exd: inspect(error)]
 
   defp __param_generator(function_name, kwargs, tid, mapping, custom_dimensions) do
     [v: 1,

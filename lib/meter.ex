@@ -1,6 +1,8 @@
 defmodule Meter do
   require Logger
 
+  alias Meter.Utils
+
   @moduledoc """
   Meter
   ============
@@ -29,7 +31,7 @@ defmodule Meter do
   "
   @spec track(atom, Keyword.t, (atom, Keyword.t, String.t, Keyword.t, [atom, ...] -> Keyword.t)) :: any
   def track(function_name, kwargs,
-            param_generator \\ Application.get_env(:meter, :param_generator, &Meter.Utils.param_generator/5)) do
+            param_generator \\ Application.get_env(:meter, :param_generator, &Utils.param_generator/5)) do
 
     tid = Application.get_env(:meter, :tid)
 
@@ -43,16 +45,17 @@ defmodule Meter do
     end
   end
 
-  # @spec track(atom, Keyword.t, (atom, Keyword.t, String.t, Keyword.t, [atom, ...] -> Keyword.t)) :: any
+  @spec track_error(atom, Keyword.t, map, (atom, Keyword.t, String.t, Keyword.t, [atom, ...] -> Keyword.t)) :: any
   def track_error(function_name, kwargs, error,
-            param_generator \\ Application.get_env(:meter, :param_generator, &Meter.Utils.param_generator/6)) do
+            param_generator \\ Application.get_env(:meter, :param_generator, &Utils.param_generator/6)) do
     tid = Application.get_env(:meter, :tid)
 
     if tid != nil do
       mapping = Application.get_env(:meter, :mapping, [])
       custom_dimensions = Application.get_env(:meter, :custom_dimensions, [])
 
-      body = {:form, param_generator.(function_name, kwargs, tid, mapping, custom_dimensions, error)}
+      body = {:form, param_generator.(function_name, kwargs, tid,
+                                      mapping, custom_dimensions, error)}
       send_request(self, body)
     end
   end
@@ -74,12 +77,12 @@ defmodule Meter do
 
   Additional parameters will be loaded from the configurationd
   """
-  defmacro defmeter({function,_,args}=fundef, [do: body]) do
+  defmacro defmeter({function,_,args} = fundef, [do: body]) do
     names = args
     |> Enum.map(fn {arg_name, _,_} -> arg_name end)
 
     metered = quote do
-      values= unquote(
+      values = unquote(
         args
         |> Enum.map(fn arg ->  quote do
             var!(unquote(arg))
