@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/carlo-colombo/meter.svg?branch=master)](https://travis-ci.org/carlo-colombo/meter)
+[![CircleCI](https://circleci.com/gh/carlo-colombo/meter.svg?style=svg)](https://circleci.com/gh/carlo-colombo/meter)
 [![Hex.pm](https://img.shields.io/hexpm/v/meter.svg?style=flat-square)](https://hex.pm/packages/meter)
 [![Coverage Status](https://coveralls.io/repos/github/carlo-colombo/meter/badge.svg?branch=master)](https://coveralls.io/github/carlo-colombo/meter?branch=master)
 
