@@ -8,7 +8,7 @@ defmodule Meter.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps,
-     description: "Track your elixir application on google analytycs",
+     description: "Track your elixir application on google analytics",
      name: "Meter",
      source_url: "https://github.com/carlo-colombo/meter",
      test_coverage: [tool: Coverex.Task, coveralls: true],
